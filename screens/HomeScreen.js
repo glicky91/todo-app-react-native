@@ -1,143 +1,144 @@
 //This is for the actual home page
 import React from 'react'
 import { useState } from 'react';
-import RenderList from '../features/RenderList'
-import { Button, ScrollView, TouchableOpacity, Text, Modal, View } from 'react-native';
+import { Button, FlatList, ScrollView, TouchableOpacity, Text, StyleSheet, Alert, View } from 'react-native';
 import { Card, ListItem, Input } from 'react-native-elements';
-import { Picker } from "@react-native-picker/picker";
-import { useSelector } from 'react-redux';
-import { taskArraySelector } from '../redux/tasks/tasksSelector';
-import { useDispatch } from 'react-redux';
-import ModalEdit from '../features/ModalEdit';
+import { TASKS } from '../shared/tasks';
+import { SwipeRow } from "react-native-swipe-list-view";
+import * as Animatable from 'react-native-animatable';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = () => {
     const [name, setName] = useState('');
-    const [urgency, setUrgency] = useState('');
-    const [status, setStatus] = useState('');
-    const [showModal, setShowModal] = useState(false);
+    const [tasklist, setTasklist] = useState(TASKS);
+    const [taskStatus, setTaskStatus] = useState(false);
+    const [isPressed, setIsPressed] = useState(false);
 
-    const dispatch = useDispatch();
+    // const handlePress = () => {
+    //     setIsPressed(!isPressed);
+    // };
 
-    const taskArray = useSelector(taskArraySelector);
+    //this was created with help from chatgpt
+    const handlePress = (index) => {
+        setTasklist((prevState) => {
+            const updatedList = prevState.map((task, i) => {
+                if (i === index) {
+                    return {
+                        ...task,
+                        isPressed: !task.isPressed
+                    };
+                }
+                return task;
+            });
+            return updatedList;
+        });
+    };
+
+
+
+    const handleSubmit = () => {
+        const newTask = {
+            name
+        };
+
+        setTasklist(tasklist.concat(newTask));
+        console.log(tasklist);
+    }
     const resetForm = () => {
         setName('');
-        setStatus('');
-        setUrgency('');
-    }
-    const handleEditSubmit = (values) => {
-        const updateTask = {
-            id: task.id,
-            name: values.name,
-            urgency: values.urgency,
-            status: values.status
-        }
-        dispatch(editTask(updateTask));
-        setModalOpen(false);
-        resetForm();
+
     }
 
+    const renderTaskList = ({ item: task, index }) => {
+        const taskName = task.name
+        return (
+            <SwipeRow rightOpenValue={-100}>
+                <View style={styles.deleteView}>
+                    {/* can you explain why the following works? */}
+                    <TouchableOpacity
+                        style={styles.deleteTouchable}
+                        onPress={() => Alert.alert('Delete Task?',
+                            'Are you sure you wish to delete the task ' + task.name + '?',
+                            [
+                                {
+                                    text: 'Cancel',
+                                    onPress: () => console.log(task.name + 'Not Deleted'),
+                                    style: 'cancel'
+                                },
+                                {
+                                    text: 'OK',
+                                    onPress: () => setTasklist(tasklist.filter(task => task.name !== taskName))
+                                }
+                            ],
+                            { cancelable: false }
+                        )}
+                    >
+                        <Text style={styles.deleteText}>Delete</Text>
+                    </TouchableOpacity>
+                </View>
+                <View>
+                    <ListItem>
+                        <ListItem.Content>
+                            <TouchableOpacity
+                                // style={isPressed ? styles.pressedButton : styles.defaultButton} => this changes all of the button colors
+                                style={[styles.buttonStyle, { backgroundColor: task.isPressed ? 'black' : 'white' }]}
+                                onPress={() => handlePress(index)}>
+                                <ListItem.Title style={isPressed ? styles.pressedButton : styles.defaultButton}>{task.name} </ListItem.Title>
+                            </TouchableOpacity>
+                        </ListItem.Content>
+                    </ListItem>
+                </View>
+            </SwipeRow >
+        )
+    };
 
     return (
         <ScrollView>
-            <>
-                <Card>
-                    <Card.Title>To Do List</Card.Title>
-                    <Card.Divider />
-                    <TouchableOpacity
-                        onPress={() =>
-                            navigation.navigate('Add New Task')
-                        }
-                    >
-                        <Card.Title>+ Add New Task</Card.Title>
-                    </TouchableOpacity>
-
-                    {taskArray.map((task, idx) => {
-                        return (
-                            <>
-                                <ListItem key={idx}>
-                                    <ListItem.Content>
-                                        <TouchableOpacity
-                                            onPress={() =>
-                                                navigation.navigate('Details', { task })
-                                            }
-                                        >
-                                            <ListItem.Subtitle>{task.name}</ListItem.Subtitle>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            onPress={() => console.log("test")}
-                                            style={{ backgroundColor: "#6495ED", alignItems: 'center' }}
-                                            accessibilityLabel="This is the urgency of your task"
-                                        >
-                                            <Text style={{ fontStyle: "italic" }}>{task.urgency}</Text>
-                                        </TouchableOpacity>
-                                        <Button
-                                            onPress={() => setShowModal(!showModal)}
-                                            title={task.status}
-
-                                            color="#841584"
-                                            accessibilityLabel="This is the status of your task"
-                                        />
-
-                                    </ListItem.Content>
-                                </ListItem>
-                                <Modal
-                                    animationType='slide'
-                                    transparent={false}
-                                    visible={showModal}
-                                    onRequestClose={() => setShowModal(!showModal)}
-                                >
-                                    <Input
-
-                                        leftIcon={{ type: 'font-awesome', name: 'user-o' }}
-                                        leftIconContainerStyle={{ paddingRight: 10 }}
-                                        onChangeText={(name) => setName(name)}
-                                        value={task.name}
-                                    />
-
-                                    <Picker
-                                        selectedValue={task.urgency}
-                                        onValueChange={(itemValue) => setUrgency(itemValue)}
-                                    >
-                                        <Picker.Item label='Urgent' value={'urgent'} />
-                                        <Picker.Item label='Not-Urgent' value={'not-urgent'} />
-                                    </Picker>
-                                    <Picker
-                                        selectedValue={task.urgency}
-                                        onValueChange={(itemValue) => setStatus(itemValue)}
-                                    >
-                                        <Picker.Item label='not-started' value={'not-started'} />
-                                        <Picker.Item label='in-progress' value={'in-progress'} />
-                                        <Picker.Item label='completed' value={'completed'} />
-                                    </Picker>
-                                    <View style={{ margin: 10 }}>
-                                        <Button
-                                            title='Submit'
-                                            color='#5637DD'
-                                            onPress={() => {
-                                                handleEditSubmit();
-                                            }}
-                                        />
-                                    </View>
-                                    <View style={{ margin: 10 }}>
-                                        <Button
-                                            onPress={() => {
-
-                                                resetForm();
-                                            }}
-                                            color='#808080'
-                                            title='Cancel'
-                                        />
-                                    </View>
-                                </Modal>
-                                {/* <ModalEdit task={task} showModal={showModal} urgency={urgency} status={status} /> */}
-                            </>
-                        )
-                    })}
-                </Card>
-
-            </>
+            <Card>
+                <Card.Title>To Do List</Card.Title>
+                <Card.Divider />
+                <Input
+                    placeholder='Add Task'
+                    leftIcon={{ type: 'font-awesome', name: 'clipboard' }}
+                    onChangeText={(name) => setName(name)}
+                    value={name}
+                />
+                <View style={{ margin: 10 }}>
+                    <Button
+                        title='Submit'
+                        color='#e0eafb'
+                        onPress={() => {
+                            handleSubmit()
+                            resetForm();
+                        }}
+                    />
+                </View>
+                <FlatList
+                    data={tasklist}
+                    renderItem={renderTaskList}
+                />
+            </Card>
         </ScrollView>
-    )
-}
 
+    )
+};
+const styles = StyleSheet.create({
+    deleteView: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        flex: 1
+    },
+    deleteTouchable: {
+        backgroundColor: 'red',
+        height: '100%',
+        justifyContent: 'center'
+    },
+    deleteText: {
+        color: 'white',
+        fontWeight: '700',
+        textAlign: 'center',
+        fontSize: 16,
+        width: 100
+    }
+})
 export default HomeScreen;
