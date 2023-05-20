@@ -1,4 +1,4 @@
-//This is for the actual home page
+//3 Qs for instructor: 1) can you explain the code on line 21 --> how it helps create single line cross offs? 2) question on line 61 of insposcreen 3) how do get it to cross out like Jims
 import React from 'react'
 import { useState } from 'react';
 import { Button, FlatList, ScrollView, TouchableOpacity, Text, StyleSheet, Alert, View } from 'react-native';
@@ -105,7 +105,7 @@ const HomeScreen = () => {
                 <View style={{ margin: 10 }}>
                     <Button
                         title='Submit'
-                        color='#e0eafb'
+                        color='#74a0ef'
                         onPress={() => {
                             handleSubmit()
                             resetForm();

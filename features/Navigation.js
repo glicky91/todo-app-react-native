@@ -42,9 +42,10 @@ const InspoScreenNavigator = () => {
     return (
         <Stack.Navigator screenOptions={screenOptions}>
             <Stack.Screen
-                name='Inspiration to be Productive'
+                name='Inspiration'
                 component={inspoScreen}
                 options={({ navigation }) => ({
+                    title: 'Inspiration to Get Stuff Done!',
                     headerLeft: () => (
                         <Icon
                             name='check'
